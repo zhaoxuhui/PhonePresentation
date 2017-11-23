@@ -9,18 +9,23 @@
 #include <stdlib.h>
 
 using namespace std;
-#define MSGSIZE 512    
+
+#define MSGSIZE 512
+#define BMP_Header_Length 54  //图像数据在内存块中的偏移量
 
 #pragma comment(lib, "ws2_32.lib")
 
-int port = 2017;
-
-GLfloat rquad1 = 0;      //立方体旋转角度
-GLfloat rquad2 = 0;      //立方体旋转角度
-GLfloat rquad3 = 0;      //立方体旋转角度
+//旋转角度
+GLfloat angle1 = 0;
+GLfloat angle2 = 0;
+GLfloat angle3 = 0;
 
 GLuint texPhone;
 GLuint texBack;
+GLuint texTop;
+GLuint texBottom;
+GLuint texLeft;
+GLuint texRight;
 
 WSADATA wsaData;
 SOCKET sListen;
@@ -30,12 +35,11 @@ SOCKADDR_IN client;
 char szMessage[MSGSIZE];
 int ret;
 int iaddrSize = sizeof(SOCKADDR_IN);
+int port = 2017;
 vector<string> tem;
 double a;
 double b;
 double c;
-
-#define BMP_Header_Length 54  //图像数据在内存块中的偏移量  
 
 //函数power_of_two用于判断一个整数是不是2的整数次幂  
 int power_of_two(int n)
@@ -159,6 +163,7 @@ GLuint load_texture(const char* file_name)
 	return texture_ID;
 }
 
+//拆分字符串
 vector<string> split(const string &s, const string &seperator){
 	vector<string> result;
 	typedef string::size_type string_size;
@@ -197,53 +202,58 @@ vector<string> split(const string &s, const string &seperator){
 	return result;
 }
 
-void init(void)
-{
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-	glShadeModel(GL_SMOOTH);
-	glEnable(GL_DEPTH_TEST);   //激活深度测试，以隐藏被遮挡面
-}
-
 void display(void)
 {
 	//清除颜色缓存和深度缓存
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	glLoadIdentity();
 	glTranslatef(0.0f, 0.0f, -7.0f);
-	glRotatef(rquad1, 1.0f, 0.0f, 0.0f);
-	glRotatef(rquad2, 0.0f, 0.0f, 1.0f);
+	glRotatef(angle1, 1.0f, 0.0f, 0.0f);
+	glRotatef(angle2, 0.0f, 0.0f, 1.0f);
 	//glRotatef(rquad3, 0.0f, 1.0f, 0.0f);
 
-	glBegin(GL_QUADS);
+	
 
 	//手机底面 橙色
+	glBindTexture(GL_TEXTURE_2D, texBottom);
+	glBegin(GL_QUADS);
 	glColor3f(1.0f, 0.79f, 0.05f);
-	glVertex3f(0.65f, -0.0325f, 1.3f);
-	glVertex3f(0.65f, 0.0325f, 1.3f);
-	glVertex3f(-0.65f, 0.0325f, 1.3f);
-	glVertex3f(-0.65f, -0.0325f, 1.3f);
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(0.65f, -0.0325f, 1.3f);
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(0.65f, 0.0325f, 1.3f);
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.65f, 0.0325f, 1.3f);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.65f, -0.0325f, 1.3f);
+	glEnd();
 
+	
 	//手机顶面 粉色
+	glBindTexture(GL_TEXTURE_2D, texTop);
+	glBegin(GL_QUADS);
 	glColor3f(1.0f, 0.69f, 0.79f);
-	glVertex3f(0.65f, -0.0325f, -1.3f);
-	glVertex3f(0.65f, 0.0325f, -1.3f);
-	glVertex3f(-0.65f, 0.0325f, -1.3f);
-	glVertex3f(-0.65f, -0.0325f, -1.3f);
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(0.65f, -0.0325f, -1.3f);
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(0.65f, 0.0325f, -1.3f);
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.65f, 0.0325f, -1.3f);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.65f, -0.0325f, -1.3f);
+	glEnd();
 
+	
 	//手机左侧面 紫色
+	glBindTexture(GL_TEXTURE_2D, texLeft);
+	glBegin(GL_QUADS);
 	glColor3f(0.64f, 0.28f, 0.64f);
-	glVertex3f(-0.65f, -0.0325f, -1.3f);
-	glVertex3f(-0.65f, -0.0325f, 1.3f);
-	glVertex3f(-0.65f, 0.0325f, 1.3f);
-	glVertex3f(-0.65f, 0.0325f, -1.3f);
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(-0.65f, -0.0325f, -1.3f);
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(-0.65f, -0.0325f, 1.3f);
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(-0.65f, 0.0325f, 1.3f);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(-0.65f, 0.0325f, -1.3f);
+	glEnd();
 
 	//手机右侧面 黄色
+	glBindTexture(GL_TEXTURE_2D, texRight);
+	glBegin(GL_QUADS);
 	glColor3f(1.0f, 0.95f, 0.0f);
-	glVertex3f(0.65f, -0.0325f, -1.3f);
-	glVertex3f(0.65f, -0.0325f, 1.3f);
-	glVertex3f(0.65f, 0.0325f, 1.3f);
-	glVertex3f(0.65f, 0.0325f, -1.3f);
-
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(0.65f, -0.0325f, -1.3f);
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(0.65f, -0.0325f, 1.3f);
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(0.65f, 0.0325f, 1.3f);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(0.65f, 0.0325f, -1.3f);
 	glEnd();
 
 	//手机正面 蓝色
@@ -266,10 +276,7 @@ void display(void)
 	glTexCoord2f(1.0f, 0.0f); glVertex3f(0.65f, -0.0325f, -1.3f);
 	glEnd();
 
-
-
-	//draw
-	glColor3f(1, 1, 1);
+	//绘制框线
 	glLineWidth(2.0f);
 	glBegin(GL_LINES);
 	//---1---
@@ -309,7 +316,8 @@ void display(void)
 	glVertex3f(-1.5, 1.5, -1.5);
 	glVertex3f(-1.5, 1.5, 1.5);
 	glEnd();
-	glutSwapBuffers();      //交换双缓存
+	//交换双缓存
+	glutSwapBuffers();
 
 	ret = recv(sClient, szMessage, MSGSIZE, 0);
 	szMessage[ret] = '\0';
@@ -322,15 +330,15 @@ void display(void)
 		b = atof(tem[1].c_str());
 		//c = atof(tem[2].c_str());
 		cout << a << " " << b << endl;
-		rquad1 = a;
-		rquad2 = 0;
-		rquad3 = 0;
+		angle1 = a;
+		angle2 = b;
+		angle3 = 0;
 	}
 	else
 	{
-		rquad1 = 0;
-		rquad2 = 0;
-		rquad3 = 0;
+		angle1 = 0;
+		angle2 = 0;
+		angle3 = 0;
 	}
 }
 
@@ -356,19 +364,7 @@ void keyboard(unsigned char key, int x, int y)
 	}
 }
 
-void findIP(char *ip, int size)
-{
-	WORD v = MAKEWORD(1, 1);
-	WSADATA wsaData;
-	WSAStartup(v, &wsaData); // 加载套接字库  
-
-	struct hostent *phostinfo = gethostbyname("");
-	char *p = inet_ntoa(*((struct in_addr *)(*phostinfo->h_addr_list)));
-	strncpy(ip, p, size - 1);
-	ip[size - 1] = '\0';
-	WSACleanup();
-}
-
+//获取本机所有IP
 void getIPs()
 {
 	WORD v = MAKEWORD(1, 1);
@@ -395,6 +391,7 @@ int main(int argc, char** argv)
 	cout << "\n第三步，在手机端点击连接..." << endl;
 	cout << "\n********等待连接********\n";
 
+	//启动Socket服务
 	WSAStartup(0x0202, &wsaData);
 
 	sListen = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -411,20 +408,34 @@ int main(int argc, char** argv)
 	printf("Accepted client:%s:%d\n", inet_ntoa(client.sin_addr),
 		ntohs(client.sin_port));
 
+	//OpenGL配置
 	glutInit(&argc, argv);
 	//使用双缓存模式和深度缓存
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
 	glutInitWindowSize(600, 350);
 	glutInitWindowPosition(200, 200);
-	glutCreateWindow("旋转动画");
+	glutCreateWindow("手机姿态");
 	glEnable(GL_TEXTURE_2D);
-	init();
-	texPhone = load_texture("G:\\zhengmian.bmp");
-	texBack = load_texture("G:\\back.bmp");
+	glClearColor(1.0f, 1.0f, 1.0f, 0.0f);
+	glShadeModel(GL_SMOOTH);
+	//激活深度测试，以隐藏被遮挡面
+	glEnable(GL_DEPTH_TEST);
+
+
+	//装载贴图
+	texPhone = load_texture("F:\\PhonePresentation\\PhonePresentation\\PC\\PresentationServer\\res\\zhengmian.bmp");
+	texBack = load_texture("F:\\PhonePresentation\\PhonePresentation\\PC\\PresentationServer\\res\\back.bmp");
+	texTop = load_texture("F:\\PhonePresentation\\PhonePresentation\\PC\\PresentationServer\\res\\top.bmp");
+	texBottom = load_texture("F:\\PhonePresentation\\PhonePresentation\\PC\\PresentationServer\\res\\bottom.bmp");
+	texLeft = load_texture("F:\\PhonePresentation\\PhonePresentation\\PC\\PresentationServer\\res\\left.bmp");
+	texRight = load_texture("F:\\PhonePresentation\\PhonePresentation\\PC\\PresentationServer\\res\\right.bmp");
+
+	
 	glutDisplayFunc(display);
 	glutReshapeFunc(reshape);
 	glutKeyboardFunc(keyboard);
-	glutIdleFunc(display);   //设置空闲时用的函数
+	//设置空闲时用的函数
+	glutIdleFunc(display);
 	glutMainLoop();
 
 	return 0;
